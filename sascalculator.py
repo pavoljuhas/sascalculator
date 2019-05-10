@@ -1,29 +1,12 @@
 #!/usr/bin/env python
-##############################################################################
-#
-# diffpy.srreal     by DANSE Diffraction group
-#                   Simon J. L. Billinge
-#                   (c) 2010 The Trustees of Columbia University
-#                   in the City of New York.  All rights reserved.
-#
-# File coded by:    Pavol Juhas
-#
-# See AUTHORS.txt for a list of people who contributed.
-# See LICENSE_DANSE.txt for license information.
-#
-##############################################################################
-
 
 """\
-Top-level classes for PDF calculation:
-
-    SASCalculator -- simulate small angle scattering from Debye summation
+Support for SAS calculation from Debye Scattering Equation.
 """
 
 
 from diffpy.srreal.pdfcalculator import DebyePDFCalculator
 from diffpy.srfit.pdf.basepdfgenerator import BasePDFGenerator
-from py10cdseowen.utils import sftxraywithseion
 
 # ----------------------------------------------------------------------------
 
@@ -43,7 +26,6 @@ class SASCalculator(DebyePDFCalculator):
         dbkw = dict(qmin=0.0, qmax=5.0, qstep=0.02, rmax=50, rstep=2)
         dbkw.update(kwargs)
         DebyePDFCalculator.__init__(self, **dbkw)
-        self.scatteringfactortable = sftxraywithseion()
         return
 
 
