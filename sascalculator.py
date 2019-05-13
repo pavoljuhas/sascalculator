@@ -91,8 +91,6 @@ class DBSASGenerator(BasePDFGenerator):
     def __init__(self, name="dbsas"):
         BasePDFGenerator.__init__(self, name)
         sc = SASCalculator()
-        if _libdiffpy_version_number >= 1002048:
-            sc.evaluatortype = 'OPTIMIZED'
         self._setCalculator(sc)
         self.removeParameter(self.delta1)
         self.removeParameter(self.delta2)
@@ -137,15 +135,3 @@ class DBSASGenerator(BasePDFGenerator):
         return yout
 
 # End class DBSASGenerator
-
-
-# ----------------------------------------------------------------------------
-
-# fetch libdiffpy version to determined if OPTIMIZED evaluator can be used
-try:
-    from diffpy.srreal.version import get_libdiffpy_version_info
-    _libdiffpy_version_number = get_libdiffpy_version_info().version_number
-except ImportError:
-    _libdiffpy_version_number = 0
-
-# End of file
