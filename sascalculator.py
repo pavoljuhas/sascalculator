@@ -99,8 +99,13 @@ class DBSASGenerator(BasePDFGenerator):
         return
 
 
-    def setDebyeSumRmax(self, rmax):
-        '''Set pair-distance limit for the Debye summation.'''
+    @property
+    def rmax(self):
+        "float : pair-distance upper bound for Debye summation."
+        return self._calc.rmax
+
+    @rmax.setter
+    def rmax(self, rmax):
         self._calc.rmax = rmax
         return
 
