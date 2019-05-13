@@ -82,7 +82,8 @@ class SASCalculator(DebyePDFCalculator):
 
 class DBSASGenerator(BasePDFGenerator):
 
-    _ignored_parnames = set('''
+    _useadp = True
+    _adpparnames = set('''
         B11 B12 B13 B21 B22 B23 B31 B32 B33 Biso
         U11 U12 U13 U21 U22 U23 U31 U32 U33 Uiso
         '''.split())
@@ -110,6 +111,23 @@ class DBSASGenerator(BasePDFGenerator):
         return
 
 
+    @property
+    def useadp(self):
+        """bool : flag for recalculating the value when ADP parameters change.
+
+        Use ``False`` in SAS regime, when ADP parameters have little effect on
+        the generated profile.  The default is ``True``.
+        """
+        return self._useadp
+
+    @useadp.setter
+    def useadp(self, flag):
+        if bool(flag) is not self._useadp:
+            self._useadp = bool(flag)
+            self._flush(other=(self,))
+        return
+
+
     def _prepare(self, q):
         """Prepare the calculator when a new q-grid is passed."""
         # store it in _lastr which is consulted in BasePDFGenerator.__call__
@@ -121,12 +139,10 @@ class DBSASGenerator(BasePDFGenerator):
 
 
     def _flush(self, other):
-        '''Ignore changes in the Debye-Waller values.
-
-        This works for srfit >= 1.0-19.
+        '''Ignore changes in ADP values when `useadp` is ``False``.
         '''
-        ignore = (isinstance(other, tuple) and len(other) > 1
-                and other[-1].name in self._ignored_parnames)
+        ignore = (not self.useadp and isinstance(other, tuple) and
+                  len(other) > 1 and other[-1].name in self._adpparnames)
         if not ignore:
             BasePDFGenerator._flush(self, other)
         return
