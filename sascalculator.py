@@ -6,6 +6,7 @@ Support for SAS calculation from Debye Scattering Equation.
 
 
 from diffpy.srreal.pdfcalculator import DebyePDFCalculator
+from diffpy.srreal.sfaverage import SFAverage
 from diffpy.srfit.pdf.basepdfgenerator import BasePDFGenerator
 
 # ----------------------------------------------------------------------------
@@ -59,21 +60,12 @@ class SASCalculator(DebyePDFCalculator):
         qa = self.qgrid
         adpt = self.getStructure()
         tbl = self.scatteringfactortable
-        asf = {}
-        asftot = numpy.zeros_like(qa)
-        asf2tot = numpy.zeros_like(qa)
-        N = adpt.countSites()
-        for i in range(N):
-            smbl = adpt.siteAtomType(i)
-            if not smbl in asf:
-                asf[smbl] = numpy.array([tbl.lookup(smbl, x) for x in qa])
-            asftot += asf[smbl]
-            asf2tot += asf[smbl] ** 2
+        sfa = SFAverage.fromStructure(adpt, tbl, qa)
         idxhi = (qa > 1e-8)
         idxlo = (~idxhi).nonzero()
         rv = numpy.zeros_like(qa)
-        rv[idxlo] = asftot[idxlo] ** 2
-        rv[idxhi] = self.value[idxhi] / qa[idxhi] + asf2tot[idxhi]
+        rv[idxlo] = sfa.f1sum[idxlo] ** 2
+        rv[idxhi] = self.value[idxhi] / qa[idxhi] + sfa.f2sum[idxhi]
         return rv
 
 # End of class SASCalculator
