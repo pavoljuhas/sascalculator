@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"test SAS calculation for 30A diameter nickel sphere"
+"test SAS calculation for 20A diameter nickel sphere"
 
 import pytest
 import numpy
