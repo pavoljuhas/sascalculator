@@ -4,6 +4,7 @@
 Support for SAS calculation from Debye Scattering Equation.
 """
 
+import numpy
 
 from diffpy.srreal.pdfcalculator import DebyePDFCalculator
 from diffpy.srreal.sfaverage import SFAverage
@@ -12,6 +13,9 @@ from diffpy.srfit.pdf.basepdfgenerator import BasePDFGenerator
 # ----------------------------------------------------------------------------
 
 class SASCalculator(DebyePDFCalculator):
+
+    _iqtot = None
+    sfavg = None
 
 
     def __init__(self, **kwargs):
@@ -28,6 +32,29 @@ class SASCalculator(DebyePDFCalculator):
         dbkw.update(kwargs)
         DebyePDFCalculator.__init__(self, **dbkw)
         return
+
+
+    @property
+    def iqtot(self):
+        'Un-normalized intensities for SAS at the ggrid points.'
+        return self._iqtot
+
+    @property
+    def iq(self):
+        'Normalized intensities for SAS at the ggrid points.'
+        return self._iqtot / self.sfavg.count
+
+    @property
+    def sq(self):
+        'Unscaled S(Q) at the ggrid points.'
+        rv = (self.iq - self.sfavg.f2avg) / (self.sfavg.f1avg ** 2) + 1
+        return rv
+
+    @property
+    def fq(self):
+        'Unscaled F(Q) at the ggrid points.'
+        rv = (self.sq - 1) * self.qgrid
+        return rv
 
 
     def __call__(self, structure=None, **kwargs):
@@ -52,21 +79,22 @@ class SASCalculator(DebyePDFCalculator):
         return rv
 
 
-    @property
-    def iqtot(self):
-        '''Un-normalized intensities for SAS at the ggrid points.
+    def eval(self, structure=None):
+        '''Evaluate Debye Scattering Equation for the given or last structure.
         '''
-        import numpy
+        DebyePDFCalculator.eval(self, structure)
         qa = self.qgrid
         adpt = self.getStructure()
         tbl = self.scatteringfactortable
-        sfa = SFAverage.fromStructure(adpt, tbl, qa)
+        sfavg = SFAverage.fromStructure(adpt, tbl, qa)
         idxhi = (qa > 1e-8)
         idxlo = (~idxhi).nonzero()
-        rv = numpy.zeros_like(qa)
-        rv[idxlo] = sfa.f1sum[idxlo] ** 2
-        rv[idxhi] = self.value[idxhi] / qa[idxhi] + sfa.f2sum[idxhi]
-        return rv
+        iqtot = numpy.zeros_like(qa)
+        iqtot[idxlo] = sfavg.f1sum[idxlo] ** 2
+        iqtot[idxhi] = self.value[idxhi] / qa[idxhi] + sfavg.f2sum[idxhi]
+        self._iqtot = iqtot
+        self.sfavg = sfavg
+        return
 
 # End of class SASCalculator
 
@@ -142,7 +170,7 @@ class DBSASGenerator(BasePDFGenerator):
 
     def __call__(self, q):
         """Calculate the I(Q) intensity from SAS."""
-        # incorporate scale value from the SASCalculator
+        # SASCalculator ignores the scale, so we add it in here
         yout = BasePDFGenerator.__call__(self, q)
         yout *= self.scale.value
         return yout
