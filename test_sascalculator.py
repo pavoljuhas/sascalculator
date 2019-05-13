@@ -6,6 +6,7 @@ import pytest
 import numpy
 
 from sascalculator import SASCalculator
+from diffpy.srreal.pdfcalculator import DebyePDFCalculator
 
 @pytest.fixture(scope='module')
 def nisph20():
@@ -24,4 +25,14 @@ def test_iqtot(nisph20):
     q, iqtot = sc(nisph20)
     assert numpy.allclose(q0, q)
     assert numpy.allclose(numpy.log(iqtot0), numpy.log(iqtot))
+    return
+
+
+def test_fq(nisph20):
+    sc = SASCalculator(rmax=22)
+    dbpc = DebyePDFCalculator(rmax=sc.rmax, qmax=sc.qmax, qstep=sc.qstep)
+    sc.eval(nisph20)
+    dbpc.eval(nisph20)
+    assert numpy.array_equal(dbpc.qgrid, sc.qgrid)
+    assert numpy.allclose(dbpc.fq, sc.fq)
     return
